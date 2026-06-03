@@ -157,7 +157,7 @@ const BottomTabNavigator = () => (
       headerTitleStyle: { fontWeight: 'bold', fontSize: 18, color: COLORS.textHigh },
     })}
   >
-    <Tab.Screen name="HomeTab" component={HomeScreen} options={{ title: 'SaukiGlobal' }} />
+    <Tab.Screen name="HomeTab" component={HomeScreen} options={{ title: 'Home' }} />
     <Tab.Screen name="ServicesTab" component={ServicesScreen} options={{ title: 'Our Services' }} />
     <Tab.Screen name="WalletTab" component={WalletScreen} options={{ title: 'My Wallet' }} />
     <Tab.Screen name="TransactionsTab" component={TransactionsScreen} options={{ title: 'Transactions' }} />

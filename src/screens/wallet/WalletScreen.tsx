@@ -206,8 +206,12 @@ export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 </View>
 
                 <View>
-                  <Text style={tw('text-textMuted text-xs mb-0.5')}>Account Name</Text>
-                  <Text style={tw('text-sm font-medium text-textHigh')}>{acc.account_name}</Text>
+                  <Text style={tw('text-textMuted text-xs mb-0.5')}>Account Name (Tap to copy)</Text>
+                  <TouchableOpacity onPress={() => copyToClipboard(acc.account_name, 'Account name')} activeOpacity={0.7}>
+                    <Text style={tw('text-sm font-medium text-textHigh')} numberOfLines={1} ellipsizeMode="tail">
+                      {acc.account_name}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               </Card>
             ))}

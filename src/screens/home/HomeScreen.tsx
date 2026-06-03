@@ -1,8 +1,8 @@
 // src/screens/home/HomeScreen.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, RefreshControl, TouchableOpacity, Share } from 'react-native';
+import { View, Text, ScrollView, RefreshControl, TouchableOpacity, Share, Alert, Clipboard } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
-import { getDashboardStats } from '../../api/services';
+import { getDashboardStats, getVirtualAccounts } from '../../api/services';
 import tw from '../../utils/styles';
 import Card from '../../components/common/Card';
 import Skeleton from '../../components/common/Skeleton';
@@ -12,7 +12,9 @@ import { COLORS } from '../../constants/theme';
 export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { user, refreshProfile } = useAuth();
   const [stats, setStats] = useState<any>(null);
+  const [accounts, setAccounts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingAccounts, setLoadingAccounts] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [hideBalance, setHideBalance] = useState(false);
 
@@ -29,14 +31,29 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     }
   };
 
+  const fetchAccounts = async () => {
+    try {
+      setLoadingAccounts(true);
+      const res = await getVirtualAccounts();
+      if (res.status && Array.isArray(res.data)) {
+        setAccounts(res.data);
+      }
+    } catch (e) {
+      console.error('Failed to load virtual accounts', e);
+    } finally {
+      setLoadingAccounts(false);
+    }
+  };
+
   const handleRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([fetchStats(), refreshProfile()]);
+    await Promise.all([fetchStats(), fetchAccounts(), refreshProfile()]);
     setRefreshing(false);
   };
 
   useEffect(() => {
     fetchStats();
+    fetchAccounts();
   }, []);
 
   const shareReferral = async () => {
@@ -50,14 +67,15 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     }
   };
 
-  // Quick Action List mapping using premium outline icons
+  // Quick Action List mapping using premium outline icons (ordered: Airtime, Data, Ratel, Kirani, Alpha, Smile, E-sims)
   const quickActions = [
-    { title: 'Buy Airtime', icon: 'phone-portrait-outline', screen: 'BuyAirtime' },
-    { title: 'Buy Data', icon: 'wifi-outline', screen: 'BuyData' },
-    { title: 'Electricity', icon: 'flash-outline', screen: 'PayElectricity' },
-    { title: 'Cable TV', icon: 'tv-outline', screen: 'PayCable' },
-    { title: 'Fund Wallet', icon: 'card-outline', screen: 'WalletTab' },
-    { title: 'Exam Cards', icon: 'school-outline', screen: 'ExamScratch' },
+    { title: 'Airtime', icon: 'phone-portrait-outline', screen: 'BuyAirtime' },
+    { title: 'Data', icon: 'wifi-outline', screen: 'BuyData' },
+    { title: 'Ratel', icon: 'call-outline', screen: 'RatelAirtime' },
+    { title: 'Kirani', icon: 'globe-outline', screen: 'KiraniAirtime' },
+    { title: 'Alpha', icon: 'radio-outline', screen: 'AlphaCall' },
+    { title: 'Smile', icon: 'mic-outline', screen: 'SmileVoice' },
+    { title: 'E-sims', icon: 'barcode-outline', screen: 'BuyEsim' },
   ];
 
   return (
@@ -85,9 +103,19 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       <Card style={tw('mb-6 relative overflow-hidden bg-surface')}>
         <View style={tw('flex-row items-center justify-between mb-2')}>
           <Text style={tw('text-textMuted text-sm font-medium')}>Wallet Balance</Text>
-          <TouchableOpacity onPress={() => setHideBalance(!hideBalance)} style={tw('px-2 py-1')}>
-            <Text style={tw('text-primary font-bold text-sm')}>{hideBalance ? '👁 Show' : '👁 Hide'}</Text>
-          </TouchableOpacity>
+          
+          <View style={tw('flex-row items-center')}>
+            <TouchableOpacity 
+              onPress={() => navigation.navigate('WalletTab')}
+              style={tw('bg-primaryDark/30 border border-primary/20 px-2.5 py-1 rounded-lg flex-row items-center mr-2')}
+            >
+              <Text style={tw('text-primary font-bold text-xs')}>+ Add Money</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => setHideBalance(!hideBalance)} style={tw('px-2 py-1 bg-zinc-800/30 rounded-lg')}>
+              <Text style={tw('text-textHigh font-medium text-xs')}>{hideBalance ? '👁 Show' : '👁 Hide'}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {loading ? (
@@ -122,23 +150,67 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             </Text>
           </View>
         </View>
+
+        {/* Virtual Accounts inside the Balance Card */}
+        {!loadingAccounts && accounts.length > 0 && (
+          <View style={tw('border-t border-zinc-800/50 pt-4 mt-4')}>
+            <Text style={tw('text-textMuted text-[10px] font-bold mb-2 tracking-wider uppercase')}>
+              Virtual Funding Accounts (PayVessel)
+            </Text>
+            <View style={tw('flex-col gap-2')}>
+              {accounts.map((acc, i) => (
+                <View key={i} style={tw('flex-row items-center justify-between bg-black/20 p-2.5 rounded-lg border border-zinc-800/10')}>
+                  <View style={tw('flex-1 mr-2')}>
+                    <Text style={tw('text-xs font-bold text-textHigh')}>{acc.bank_name}</Text>
+                    <TouchableOpacity
+                      onPress={() => {
+                        Clipboard.setString(acc.account_number);
+                        Alert.alert('Copied!', `${acc.bank_name} account number copied to clipboard.`);
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={tw('text-sm font-mono text-primary font-bold')}>{acc.account_number}</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={tw('items-end flex-1')}>
+                    <TouchableOpacity
+                      onPress={() => {
+                        Clipboard.setString(acc.account_name);
+                        Alert.alert('Copied!', 'Account name copied to clipboard.');
+                      }}
+                      activeOpacity={0.7}
+                      style={tw('w-full items-end')}
+                    >
+                      <Text style={tw('text-[10px] text-textMuted text-right')} numberOfLines={1} ellipsizeMode="tail">
+                        {acc.account_name}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => {
+                        Clipboard.setString(acc.account_number);
+                        Alert.alert('Copied!', `${acc.bank_name} account number copied to clipboard.`);
+                      }}
+                      style={tw('mt-1 bg-primaryDark/30 px-2 py-0.5 rounded')}
+                    >
+                      <Text style={tw('text-[10px] text-primary font-bold')}>Copy No</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
       </Card>
 
       {/* Quick Actions Grid */}
       <View style={tw('mb-6')}>
         <Text style={tw('text-base font-bold text-textHigh mb-4')}>Quick Actions</Text>
         
-        <View style={tw('flex-row flex-wrap gap-4 justify-between')}>
+        <View style={tw('flex-row flex-wrap gap-4 justify-start')}>
           {quickActions.map((action, i) => (
             <TouchableOpacity
               key={i}
-              onPress={() => {
-                if (action.screen === 'WalletTab') {
-                  navigation.navigate('WalletTab');
-                } else {
-                  navigation.navigate(action.screen);
-                }
-              }}
+              onPress={() => navigation.navigate(action.screen)}
               style={[
                 tw('bg-surface items-center justify-center p-4 rounded-2xl w-[30%] border border-zinc-800/30'),
                 { minHeight: 90 }
