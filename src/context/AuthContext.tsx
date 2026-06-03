@@ -54,14 +54,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     try {
       const response = await loginUser({ email, password });
+      console.log('[AuthContext] Login API Response:', response);
       if (response.status && response.data) {
         const { token: userToken, user: userProfile } = response.data;
+        console.log('[AuthContext] Saving token:', userToken);
+        console.log('[AuthContext] Saving profile:', userProfile);
         await storage.saveToken(userToken);
         await storage.saveUser(userProfile);
         setToken(userToken);
         setUser(userProfile);
         // Async update from profile endpoint to sync extra details (balance, virtual accounts)
         setTimeout(() => refreshProfile(), 200);
+      } else {
+        console.warn('[AuthContext] Login response status or data field missing:', response);
       }
       return response;
     } finally {
@@ -101,7 +106,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refreshProfile = async () => {
     try {
+      const activeToken = await storage.getToken();
+      console.log('[AuthContext] Refreshing profile. Token in storage:', activeToken);
       const response = await getUserProfile();
+      console.log('[AuthContext] Get Profile Response:', response);
       if (response.status && response.data) {
         const updatedUser = response.data;
         // Merge with existing user details (to preserve things like virtual accounts returned at registration)
@@ -110,7 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(mergedUser);
       }
     } catch (e) {
-      console.error('Failed to sync profile details', e);
+      console.error('[AuthContext] Failed to sync profile details', e);
     }
   };
 
