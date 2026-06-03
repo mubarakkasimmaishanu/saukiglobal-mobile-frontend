@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, RefreshControl, TouchableOpacity, Alert, Clipboard, ActivityIndicator } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
-import { getVirtualAccounts, initializePayment, getDashboardStats } from '../../api/services';
+import { getVirtualAccounts, initializePayment, getDashboardStats, createVirtualAccount } from '../../api/services';
 import tw from '../../utils/styles';
 import Card from '../../components/common/Card';
 import Input from '../../components/common/Input';
@@ -18,6 +18,11 @@ export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [gateway, setGateway] = useState<'paystack' | 'korapay' | 'monnify'>('paystack');
   const [funding, setFunding] = useState(false);
 
+  // KYC States for Virtual Account Provisioning
+  const [kycType, setKycType] = useState<'bvn' | 'nin'>('bvn');
+  const [kycValue, setKycValue] = useState('');
+  const [generating, setGenerating] = useState(false);
+
   const fetchAccounts = async () => {
     try {
       setLoadingAccounts(true);
@@ -29,6 +34,32 @@ export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       console.error('Failed to load virtual accounts', e);
     } finally {
       setLoadingAccounts(false);
+    }
+  };
+
+  const handleGenerateVirtualAccounts = async () => {
+    if (kycValue.length !== 11 || !/^\d{11}$/.test(kycValue)) {
+      Alert.alert('Validation Error', `${kycType.toUpperCase()} must be exactly 11 digits`);
+      return;
+    }
+
+    setGenerating(true);
+    try {
+      const bvn = kycType === 'bvn' ? kycValue : undefined;
+      const nin = kycType === 'nin' ? kycValue : undefined;
+      
+      const res = await createVirtualAccount(bvn, nin);
+      if (res.status) {
+        Alert.alert('Success', res.message || 'Virtual accounts generated successfully!');
+        setKycValue('');
+        await fetchAccounts(); // Refresh bank accounts list
+      } else {
+        Alert.alert('Generation Failed', res.message || 'Could not generate virtual accounts.');
+      }
+    } catch (e: any) {
+      Alert.alert('Error', e.message || 'An error occurred during account provisioning.');
+    } finally {
+      setGenerating(false);
     }
   };
 
@@ -115,14 +146,39 @@ export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             <Text style={tw('text-xs text-textMuted mt-2')}>Generating your virtual accounts...</Text>
           </View>
         ) : accounts.length === 0 ? (
-          <View style={tw('bg-surface p-6 rounded-2xl border border-zinc-800/20 items-center justify-center')}>
-            <Text style={tw('text-sm text-textMuted text-center mb-4')}>
-              No active virtual accounts. Verify KYC to provision bank accounts.
+          <View style={tw('bg-surface p-6 rounded-2xl border border-zinc-800/20')}>
+            <Text style={tw('text-base font-bold text-textHigh text-center mb-1')}>
+              Verify KYC to Provision Virtual Accounts
             </Text>
+            <Text style={tw('text-xs text-textMuted text-center mb-6')}>
+              Choose a verification method and enter your 11-digit BVN or NIN number to generate your instant funding bank accounts.
+            </Text>
+
+            <Dropdown
+              label="Verification Type"
+              value={kycType}
+              options={[
+                { label: 'Bank Verification Number (BVN)', value: 'bvn' },
+                { label: 'National Identification Number (NIN)', value: 'nin' },
+              ]}
+              onSelect={(opt) => setKycType(opt.value as 'bvn' | 'nin')}
+            />
+
+            <Input
+              label={kycType === 'bvn' ? '11-Digit BVN Number' : '11-Digit NIN Number'}
+              placeholder={`Enter 11-digit ${kycType.toUpperCase()}`}
+              keyboardType="numeric"
+              maxLength={11}
+              value={kycValue}
+              onChangeText={setKycValue}
+            />
+
             <Button
-              title="Provision Accounts"
-              onPress={() => navigation.navigate('Register')} // Or profile KYC
-              style={tw('w-1/2')}
+              title="Generate Virtual Accounts"
+              onPress={handleGenerateVirtualAccounts}
+              loading={generating}
+              disabled={kycValue.length !== 11 || !/^\d{11}$/.test(kycValue)}
+              style={tw('mt-2')}
             />
           </View>
         ) : (

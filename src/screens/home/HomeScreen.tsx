@@ -6,6 +6,8 @@ import { getDashboardStats } from '../../api/services';
 import tw from '../../utils/styles';
 import Card from '../../components/common/Card';
 import Skeleton from '../../components/common/Skeleton';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '../../constants/theme';
 
 export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { user, refreshProfile } = useAuth();
@@ -48,14 +50,14 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     }
   };
 
-  // Quick Action List mapping
+  // Quick Action List mapping using premium outline icons
   const quickActions = [
-    { title: 'Buy Airtime', icon: '📱', screen: 'BuyAirtime' },
-    { title: 'Buy Data', icon: '📡', screen: 'BuyData' },
-    { title: 'Electricity', icon: '⚡', screen: 'PayElectricity' },
-    { title: 'Cable TV', icon: '📺', screen: 'PayCable' },
-    { title: 'Fund Wallet', icon: '💳', screen: 'WalletTab' }, // Routes to Wallet Tab
-    { title: 'Exam Cards', icon: '📝', screen: 'ExamScratch' },
+    { title: 'Buy Airtime', icon: 'phone-portrait-outline', screen: 'BuyAirtime' },
+    { title: 'Buy Data', icon: 'wifi-outline', screen: 'BuyData' },
+    { title: 'Electricity', icon: 'flash-outline', screen: 'PayElectricity' },
+    { title: 'Cable TV', icon: 'tv-outline', screen: 'PayCable' },
+    { title: 'Fund Wallet', icon: 'card-outline', screen: 'WalletTab' },
+    { title: 'Exam Cards', icon: 'school-outline', screen: 'ExamScratch' },
   ];
 
   return (
@@ -142,7 +144,9 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 { minHeight: 90 }
               ]}
             >
-              <Text style={tw('text-2xl mb-2')}>{action.icon}</Text>
+              <View style={tw('mb-2')}>
+                <Ionicons name={action.icon as any} size={24} color={COLORS.primary} />
+              </View>
               <Text style={tw('text-xs font-medium text-textHigh text-center')}>{action.title}</Text>
             </TouchableOpacity>
           ))}

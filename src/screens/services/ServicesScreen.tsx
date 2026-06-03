@@ -2,21 +2,23 @@
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import tw from '../../utils/styles';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '../../constants/theme';
 
 export const ServicesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const services = [
-    { title: 'Airtime Topup', desc: 'MTN, Airtel, Glo, 9mobile', icon: '📱', screen: 'BuyAirtime' },
-    { title: 'Data Bundles', desc: 'Fast SME & Corporate Gifting', icon: '📡', screen: 'BuyData' },
-    { title: 'Electricity Bills', desc: 'Prepaid & Postpaid Tokens', icon: '⚡', screen: 'PayElectricity' },
-    { title: 'Cable TV', desc: 'DSTV, GOTV, Startimes', icon: '📺', screen: 'PayCable' },
-    { title: 'Exam Pin Cards', desc: 'WAEC, NECO check pins', icon: '📝', screen: 'ExamScratch' },
-    { title: 'Kirani Airtime', desc: 'Kirani Network Top-up', icon: '🌐', screen: 'KiraniAirtime' },
-    { title: 'Ratel Airtime', desc: 'Ratel Network Call Credit', icon: '📞', screen: 'RatelAirtime' },
-    { title: 'Smile Voice', desc: 'Smile ISP Voice Package', icon: '🗣️', screen: 'SmileVoice' },
-    { title: 'Smile Data Bundle', desc: 'Smile ISP High-speed Data', icon: '📶', screen: 'SmileData' },
-    { title: 'Alpha Call', desc: 'Alpha Platform Credits', icon: '🎯', screen: 'AlphaCall' },
-    { title: 'eSIM Profile', desc: 'Digital eSIM QR Codes', icon: '📲', screen: 'BuyEsim' },
-    { title: 'International Topup', desc: 'Global Airtime & Data', icon: '✈️', screen: 'IntlTopup' },
+    { title: 'Airtime Topup', desc: 'MTN, Airtel, Glo, 9mobile', icon: 'phone-portrait-outline', screen: 'BuyAirtime' },
+    { title: 'Data Bundles', desc: 'Fast SME & Corporate Gifting', icon: 'wifi-outline', screen: 'BuyData' },
+    { title: 'Electricity Bills', desc: 'Prepaid & Postpaid Tokens', icon: 'flash-outline', screen: 'PayElectricity' },
+    { title: 'Cable TV', desc: 'DSTV, GOTV, Startimes', icon: 'tv-outline', screen: 'PayCable' },
+    { title: 'Exam Pin Cards', desc: 'WAEC, NECO check pins', icon: 'school-outline', screen: 'ExamScratch' },
+    { title: 'Kirani Airtime', desc: 'Kirani Network Top-up', icon: 'globe-outline', screen: 'KiraniAirtime' },
+    { title: 'Ratel Airtime', desc: 'Ratel Network Call Credit', icon: 'call-outline', screen: 'RatelAirtime' },
+    { title: 'Smile Voice', desc: 'Smile ISP Voice Package', icon: 'mic-outline', screen: 'SmileVoice' },
+    { title: 'Smile Data Bundle', desc: 'Smile ISP High-speed Data', icon: 'cellular-outline', screen: 'SmileData' },
+    { title: 'Alpha Call', desc: 'Alpha Platform Credits', icon: 'radio-outline', screen: 'AlphaCall' },
+    { title: 'eSIM Profile', desc: 'Digital eSIM QR Codes', icon: 'barcode-outline', screen: 'BuyEsim' },
+    { title: 'International Topup', desc: 'Global Airtime & Data', icon: 'airplane-outline', screen: 'IntlTopup' },
   ];
 
   return (
@@ -35,7 +37,7 @@ export const ServicesScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
             style={tw('bg-surface p-4 rounded-xl border border-zinc-800/20 flex-row items-center')}
           >
             <View style={tw('w-12 h-12 bg-primaryDark/30 items-center justify-center rounded-xl mr-4')}>
-              <Text style={tw('text-2xl')}>{srv.icon}</Text>
+              <Ionicons name={srv.icon as any} size={22} color={COLORS.primary} />
             </View>
             
             <View style={tw('flex-1')}>

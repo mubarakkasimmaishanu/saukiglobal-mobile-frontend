@@ -89,24 +89,28 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-// Simple TabBar Icon Custom Component using unicode icons to avoid external package weight
+import { Ionicons } from '@expo/vector-icons';
+
+// TabBar Icon Custom Component using vector icons for premium appearance
 interface TabIconProps {
   label: string;
   focused: boolean;
 }
 const TabIcon: React.FC<TabIconProps> = ({ label, focused }) => {
   const icons: Record<string, string> = {
-    HomeTab: '🏠',
-    ServicesTab: '⚡',
-    WalletTab: '💳',
-    TransactionsTab: '📝',
-    ProfileTab: '👤',
+    HomeTab: focused ? 'home' : 'home-outline',
+    ServicesTab: focused ? 'apps' : 'apps-outline',
+    WalletTab: focused ? 'wallet' : 'wallet-outline',
+    TransactionsTab: focused ? 'receipt' : 'receipt-outline',
+    ProfileTab: focused ? 'person' : 'person-outline',
   };
   return (
     <View style={tw('items-center justify-center pt-1')}>
-      <Text style={[tw('text-lg'), { color: focused ? COLORS.primary : COLORS.textMuted }]}>
-        {icons[label] || '•'}
-      </Text>
+      <Ionicons
+        name={(icons[label] || 'ellipse-outline') as any}
+        size={22}
+        color={focused ? COLORS.primary : COLORS.textMuted}
+      />
     </View>
   );
 };

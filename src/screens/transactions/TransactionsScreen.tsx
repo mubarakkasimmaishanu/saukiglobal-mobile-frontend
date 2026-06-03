@@ -5,6 +5,7 @@ import { getTransactions, TransactionItem } from '../../api/services';
 import tw from '../../utils/styles';
 import { COLORS } from '../../constants/theme';
 import Skeleton from '../../components/common/Skeleton';
+import { Ionicons } from '@expo/vector-icons';
 
 export const TransactionsScreen: React.FC = () => {
   const [txs, setTxs] = useState<TransactionItem[]>([]);
@@ -161,7 +162,7 @@ export const TransactionsScreen: React.FC = () => {
         </View>
       ) : filteredTxs.length === 0 ? (
         <View style={tw('flex-1 items-center justify-center p-6')}>
-          <Text style={tw('text-3xl mb-2')}>📝</Text>
+          <Ionicons name="receipt-outline" size={40} color={COLORS.textMuted} style={tw('mb-2')} />
           <Text style={tw('text-base text-textMuted font-semibold')}>No transactions found</Text>
           <Text style={tw('text-xs text-textMuted mt-1')}>Try clearing filters or search term.</Text>
         </View>

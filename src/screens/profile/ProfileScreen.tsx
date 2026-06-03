@@ -1,6 +1,6 @@
 // src/screens/profile/ProfileScreen.tsx
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { updateProfile } from '../../api/services';
 import tw from '../../utils/styles';
@@ -40,10 +40,17 @@ export const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
   };
 
   const handleLogout = () => {
-    Alert.alert('Sign Out', 'Are you sure you want to sign out of SaukiGlobal?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign Out', style: 'destructive', onPress: () => logout() },
-    ]);
+    if (Platform.OS === 'web') {
+      const confirmLogout = window.confirm('Are you sure you want to sign out of SaukiGlobal?');
+      if (confirmLogout) {
+        logout();
+      }
+    } else {
+      Alert.alert('Sign Out', 'Are you sure you want to sign out of SaukiGlobal?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Sign Out', style: 'destructive', onPress: () => logout() },
+      ]);
+    }
   };
 
   const menuItems = [
