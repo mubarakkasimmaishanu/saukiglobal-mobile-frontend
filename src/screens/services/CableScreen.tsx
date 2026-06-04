@@ -1,6 +1,6 @@
 // src/screens/services/CableScreen.tsx
 import React, { useState, useEffect } from 'react';
-import { ScrollView, Alert, View, Text } from 'react-native';
+import { ScrollView, Alert, View, Text, Image, TouchableOpacity } from 'react-native';
 import { getCableProviders, getCablePlans, executeServiceTransaction } from '../../api/services';
 import { useAuth } from '../../context/AuthContext';
 import tw from '../../utils/styles';
@@ -8,6 +8,20 @@ import Input from '../../components/common/Input';
 import Dropdown, { DropdownOption } from '../../components/common/Dropdown';
 import PinInput from '../../components/common/PinInput';
 import Button from '../../components/common/Button';
+
+const CABLE_LOGOS: Record<string, any> = {
+  dstv: require('../../../assets/dstv.png'),
+  gotv: require('../../../assets/gotv.png'),
+  startimes: require('../../../assets/startimes.png'),
+};
+
+const getCableLogoKey = (name: string): string => {
+  const normalized = name.toLowerCase();
+  if (normalized.includes('dstv')) return 'dstv';
+  if (normalized.includes('gotv')) return 'gotv';
+  if (normalized.includes('startimes') || normalized.includes('star times')) return 'startimes';
+  return '';
+};
 
 export const CableScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { refreshProfile } = useAuth();
@@ -34,10 +48,14 @@ export const CableScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       try {
         const res = await getCableProviders();
         if (res.status && Array.isArray(res.data)) {
-          setProviders(res.data.map((p: any) => ({
+          const opts = res.data.map((p: any) => ({
             label: p.name.toUpperCase(),
             value: p.name,
-          })));
+          }));
+          setProviders(opts);
+          if (opts.length > 0) {
+            setSelectedProvider(String(opts[0].value));
+          }
         }
       } catch (e) {
         console.error('Failed to load cable providers', e);
@@ -127,63 +145,106 @@ export const CableScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   };
 
   return (
-    <ScrollView style={tw('flex-grow bg-background')} contentContainerStyle={tw('p-5 justify-center')}>
-      <Dropdown
-        label="Select Provider"
-        value={selectedProvider}
-        placeholder={loadingProviders ? 'Loading providers...' : 'Choose provider'}
-        options={providers}
-        onSelect={(opt) => setSelectedProvider(String(opt.value))}
-      />
+    <ScrollView style={tw('flex-grow bg-background')} contentContainerStyle={tw('p-5 justify-start')}>
+      <View style={tw('bg-surface p-5 rounded-2xl border border-zinc-800/50 w-full mb-6')}>
+        
+        {/* Choose Provider */}
+        <Text style={tw('text-xs font-bold text-textMuted uppercase mb-3')}>Choose Provider</Text>
+        {loadingProviders ? (
+          <View style={tw('py-4 items-center mb-4')}>
+            <Text style={tw('text-textMuted text-sm')}>Loading providers...</Text>
+          </View>
+        ) : (
+          <View style={tw('flex-row justify-between mb-5 gap-2')}>
+            {providers.map((prov) => {
+              const logoKey = getCableLogoKey(prov.label);
+              const isSelected = selectedProvider === prov.value;
+              const logoSource = CABLE_LOGOS[logoKey];
 
-      <Dropdown
-        label="Select Package"
-        value={selectedPlan}
-        placeholder={
-          !selectedProvider
-            ? 'Select provider first'
-            : loadingPlans
-            ? 'Loading packages...'
-            : 'Choose package'
-        }
-        options={plans}
-        onSelect={(opt) => {
-          setSelectedPlan(opt.value);
-          setSelectedPlanDetails(opt);
-        }}
-        searchable
-      />
+              return (
+                <TouchableOpacity
+                  key={prov.value}
+                  activeOpacity={0.7}
+                  onPress={() => setSelectedProvider(String(prov.value))}
+                  style={[
+                    tw('flex-1 p-3 items-center justify-center rounded-xl border-2 bg-background'),
+                    isSelected ? tw('border-primary') : tw('border-zinc-800/40'),
+                  ]}
+                >
+                  {logoSource ? (
+                    <Image
+                      source={logoSource}
+                      style={{ width: 36, height: 36, resizeMode: 'contain', marginBottom: 6 }}
+                    />
+                  ) : (
+                    <View style={tw('w-9 h-9 bg-zinc-800 rounded-full items-center justify-center mb-1.5')}>
+                      <Text style={tw('text-textHigh font-bold text-xs')}>{prov.label.slice(0, 3)}</Text>
+                    </View>
+                  )}
+                  <Text style={tw('text-xs font-bold text-textHigh text-center uppercase')}>{prov.label}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
 
-      <Input
-        label="Smart Card / IUC Number"
-        placeholder="Enter smartcard number"
-        keyboardType="numeric"
-        value={smartCard}
-        onChangeText={setSmartCard}
-        editable={!submitting}
-      />
+        {/* Smart Card / IUC Number Input */}
+        <Input
+          label="IUC/SMARTCARD NUMBER"
+          placeholder="Enter smartcard number"
+          keyboardType="numeric"
+          value={smartCard}
+          onChangeText={setSmartCard}
+          editable={!submitting}
+          labelStyle={tw('text-xs font-bold text-textMuted uppercase mb-2')}
+          inputStyle={tw('bg-background px-4 py-4 rounded-xl border border-zinc-800/40 text-base')}
+        />
 
-      {selectedPlanDetails && (
-        <View style={tw('bg-surface p-4 rounded-xl border border-zinc-800/15 mb-6')}>
-          <Text style={tw('text-xs text-textMuted mb-0.5')}>Amount to Debit</Text>
-          <Text style={tw('text-lg font-bold text-primary')}>
-            ₦{selectedPlanDetails.price?.toLocaleString()}
-          </Text>
-        </View>
-      )}
+        {/* Package Selector Dropdown */}
+        <Dropdown
+          label="SELECT PACKAGE"
+          value={selectedPlan}
+          placeholder={
+            !selectedProvider
+              ? 'Select provider first'
+              : loadingPlans
+              ? 'Loading packages...'
+              : 'Choose package'
+          }
+          options={plans}
+          onSelect={(opt) => {
+            setSelectedPlan(opt.value);
+            setSelectedPlanDetails(opt);
+          }}
+          searchable
+          containerStyle={tw('mb-4')}
+        />
 
-      <PinInput
-        label="Enter 4-Digit PIN to Confirm"
-        value={pin}
-        onChangeText={setPin}
-      />
+        {/* Amount Details Box */}
+        {selectedPlanDetails && (
+          <View style={tw('bg-background p-4 rounded-xl border border-zinc-800/40 mb-6')}>
+            <Text style={tw('text-xs font-bold text-textMuted uppercase mb-1')}>Amount to Debit</Text>
+            <Text style={tw('text-lg font-bold text-primary')}>
+              ₦{selectedPlanDetails.price?.toLocaleString()}
+            </Text>
+          </View>
+        )}
 
-      <Button
-        title="Subscribe Cable"
-        onPress={handlePurchase}
-        loading={submitting}
-        disabled={submitting}
-      />
+        {/* Transaction PIN */}
+        <PinInput
+          label="TRANSACTION PIN"
+          value={pin}
+          onChangeText={setPin}
+        />
+
+        {/* Action Button */}
+        <Button
+          title="Subscribe Cable"
+          onPress={handlePurchase}
+          loading={submitting}
+          disabled={submitting}
+        />
+      </View>
     </ScrollView>
   );
 };
