@@ -1,15 +1,15 @@
 // src/constants/theme.ts
 
 export const COLORS = {
-  background: '#020d08',
-  surface: '#051a10',
-  primary: '#10b981',
-  primaryDark: '#065f46',
-  textHigh: '#f4f4f5',
+  background: '#080d0a',
+  surface: '#0a1811',
+  primary: '#66df75',
+  primaryDark: '#0a2214',
+  textHigh: '#e1e3e4',
   textMuted: '#71717a',
   error: '#ef4444',
   warning: '#f59e0b',
-  border: '#10b98120',
+  border: '#66df7515',
 };
 
 export const SIZES = {
